@@ -6,18 +6,25 @@ import (
 	"log"
 
 	"github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/device"
 )
 
 func main() {
-	ctx, cancel := chromedp.NewContext(context.Background())
+	allocOpts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.DisableGPU,
+	)
+	allocCtx, allocCancel := chromedp.NewExecAllocator(context.Background(), allocOpts...)
+	defer allocCancel()
+
+	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 
 	var buf []byte
-	selector := `div[data-hveid="CBQQPQ"]`
 	if err := chromedp.Run(ctx, chromedp.Tasks{
+		chromedp.Emulate(device.Pixel2XL),
 		chromedp.Navigate(`https://www.google.com/search?q=covid-19+stats+united+states`),
-		chromedp.WaitVisible(selector, chromedp.ByQuery),
-		chromedp.Screenshot(selector, &buf, chromedp.NodeVisible, chromedp.ByQuery),
+		chromedp.ScrollIntoView(`div[data-async-type="outbreak_stats_table"] table`),
+		chromedp.Screenshot(`div#wp-tabs-container`, &buf, chromedp.NodeVisible, chromedp.ByQuery),
 	}); err != nil {
 		log.Fatal(err)
 	}
