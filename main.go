@@ -20,11 +20,12 @@ func main() {
 	defer cancel()
 
 	var buf []byte
+	var x string
 	if err := chromedp.Run(ctx, chromedp.Tasks{
-		chromedp.Emulate(device.Pixel2XL),
+		chromedp.Emulate(device.Pixel2),
 		chromedp.Navigate(`https://www.google.com/search?q=covid-19+stats+united+states`),
-		chromedp.ScrollIntoView(`div[data-async-type="outbreak_stats_table"] table`),
-		chromedp.Screenshot(`div#wp-tabs-container`, &buf, chromedp.NodeVisible, chromedp.ByQuery),
+		chromedp.EvaluateAsDevTools("window.scroll(0, 155); '1';", &x),
+		chromedp.CaptureScreenshot(&buf),
 	}); err != nil {
 		log.Fatal(err)
 	}
